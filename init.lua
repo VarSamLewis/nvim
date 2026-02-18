@@ -1,5 +1,13 @@
---tbootstrap lazy.nvim
-vim.opt.rtp:prepend(vim.fn.stdpath("data") .. "/lazy/lazy.nvim")
+-- bootstrap lazy.nvim
+local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+if not vim.loop.fs_stat(lazypath) then
+  vim.fn.system({ "git", "clone", "--filter=blob:none",
+    "https://github.com/folke/lazy.nvim.git", lazypath })
+end
+vim.opt.rtp:prepend(lazypath)
+
+-- mapleader must be set before lazy loads plugins
+vim.g.mapleader = " "
 
 -- load Lazy.nvim and setup plugins
 require("lazy").setup({
@@ -45,6 +53,18 @@ require("lazy").setup({
       "nvim-tree/nvim-web-devicons",
       "MunifTanjim/nui.nvim",
     },
+    config = function()
+      require("neo-tree").setup({
+        filesystem = {
+          filtered_items = {
+            visible = true,
+            hide_dotfiles = false,
+            hide_gitignored = false,
+          },
+          follow_current_file = { enabled = true },
+        },
+      })
+    end,
   },
 
   -- Debugger
@@ -150,8 +170,25 @@ require("lazy").setup({
   },
 
   -- Completion engine
-  { "hrsh7th/nvim-cmp" },
-  { "hrsh7th/cmp-nvim-lsp" },
+  {
+    "hrsh7th/nvim-cmp",
+    dependencies = { "hrsh7th/cmp-nvim-lsp" },
+    config = function()
+      local cmp = require("cmp")
+      cmp.setup({
+        sources = cmp.config.sources({
+          { name = "nvim_lsp" },
+        }),
+        mapping = cmp.mapping.preset.insert({
+          ["<C-Space>"] = cmp.mapping.complete(),
+          ["<C-e>"]     = cmp.mapping.abort(),
+          ["<CR>"]      = cmp.mapping.confirm({ select = true }),
+          ["<Tab>"]     = cmp.mapping.select_next_item(),
+          ["<S-Tab>"]   = cmp.mapping.select_prev_item(),
+        }),
+      })
+    end,
+  },
 })
 
 -- LSP server config (nvim 0.11+ native API)
@@ -164,7 +201,6 @@ end
 vim.lsp.enable(servers)
 
 -- Keymaps
-vim.g.mapleader = " "
 vim.keymap.set("n", "<leader>ft", ":Neotree toggle<CR>", { desc = "Toggle file tree" })
 
 -- Telescope keymaps
