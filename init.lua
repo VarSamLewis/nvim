@@ -1,3 +1,16 @@
+-- Options
+vim.opt.number = true
+vim.opt.relativenumber = true
+vim.opt.expandtab = true
+vim.opt.shiftwidth = 4
+vim.opt.tabstop = 4
+vim.opt.smartindent = true
+vim.opt.wrap = false
+vim.opt.scrolloff = 8
+vim.opt.signcolumn = "yes"
+vim.opt.cursorline = true
+vim.opt.clipboard = "unnamedplus"
+
 -- bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
