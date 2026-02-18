@@ -25,12 +25,12 @@ vim.g.mapleader = " "
 -- load Lazy.nvim and setup plugins
 require("lazy").setup({
   -- Colorscheme
- {
-    "catppuccin/nvim",
-    name = "catppuccin",
+  {
+    "AlexvZyl/nordic.nvim",
+    lazy = false,
     priority = 1000,
     config = function()
-      vim.cmd.colorscheme("catppuccin")
+      require("nordic").load()
     end,
   },
 
