@@ -214,7 +214,7 @@ end
 vim.lsp.enable(servers)
 
 -- Keymaps
-vim.keymap.set("n", "<leader>ft", ":Neotree toggle<CR>", { desc = "Toggle file tree" })
+vim.keymap.set("n", "<leader>fe", ":Neotree toggle<CR>", { desc = "Toggle file tree" })
 
 -- Telescope keymaps
 vim.keymap.set("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find files" })
