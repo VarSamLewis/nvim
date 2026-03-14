@@ -9,7 +9,6 @@ vim.opt.wrap = false
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
 vim.opt.cursorline = true
-vim.opt.clipboard = "unnamedplus"
 
 -- bootstrap lazy.nvim
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
@@ -49,7 +48,7 @@ require("lazy").setup({
   },
   {
     "williamboman/mason-lspconfig.nvim",
-    dependencies = { "williamboman/mason.nvim" },
+    dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
     config = function()
       require("mason-lspconfig").setup({
         ensure_installed = { "pyright", "gopls", "rust_analyzer" },
@@ -182,6 +181,42 @@ require("lazy").setup({
     end,
   },
 
+  -- Commenting
+  {
+    "numToStr/Comment.nvim",
+    config = function()
+      require("Comment").setup()
+    end,
+  },
+
+  -- Diagnostic list
+  {
+    "folke/trouble.nvim",
+    dependencies = { "nvim-tree/nvim-web-devicons" },
+    config = function()
+      require("trouble").setup()
+    end,
+  },
+
+  -- Quick file jumping
+  {
+    "ThePrimeagen/harpoon",
+    branch = "harpoon2",
+    dependencies = { "nvim-lua/plenary.nvim" },
+    config = function()
+      require("harpoon"):setup()
+    end,
+  },
+
+  -- Modern folding
+  {
+    "kevinhwang91/nvim-ufo",
+    dependencies = { "kevinhwang91/promise-async" },
+    config = function()
+      require("ufo").setup()
+    end,
+  },
+
   -- Completion engine
   {
     "hrsh7th/nvim-cmp",
@@ -204,14 +239,16 @@ require("lazy").setup({
   },
 })
 
--- LSP server config (nvim 0.11+ native API)
+-- LSP server config
 local capabilities = require("cmp_nvim_lsp").default_capabilities()
+local lspconfig = require("lspconfig")
 
 local servers = { "pyright", "gopls", "rust_analyzer" }
 for _, server in ipairs(servers) do
-  vim.lsp.config(server, { capabilities = capabilities })
+  vim.lsp.config(server, {
+    capabilities = capabilities,
+  })
 end
-vim.lsp.enable(servers)
 
 -- Keymaps
 vim.keymap.set("n", "<leader>fe", ":Neotree toggle<CR>", { desc = "Toggle file tree" })
@@ -243,5 +280,26 @@ vim.keymap.set("n", "<leader>dc", function() require("dap").continue() end, { de
 vim.keymap.set("n", "<leader>do", function() require("dap").step_over() end, { desc = "Debug step over" })
 vim.keymap.set("n", "<leader>di", function() require("dap").step_into() end, { desc = "Debug step into" })
 vim.keymap.set("n", "<leader>du", function() require("dapui").toggle() end, { desc = "Toggle debug UI" })
+
+-- Trouble keymaps
+vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end, { desc = "Toggle trouble" })
+vim.keymap.set("n", "<leader>xw", function() require("trouble").toggle("workspace_diagnostics") end, { desc = "Workspace diagnostics" })
+vim.keymap.set("n", "<leader>xd", function() require("trouble").toggle("document_diagnostics") end, { desc = "Document diagnostics" })
+vim.keymap.set("n", "<leader>xl", function() require("trouble").toggle("loclist") end, { desc = "Location list" })
+vim.keymap.set("n", "<leader>xq", function() require("trouble").toggle("quickfix") end, { desc = "Quickfix list" })
+
+-- Harpoon keymaps
+vim.keymap.set("n", "<leader>ha", function() require("harpoon"):list():add() end, { desc = "Add file to harpoon" })
+vim.keymap.set("n", "<leader>hh", function() require("harpoon"):list():toggle() end, { desc = "Toggle harpoon" })
+vim.keymap.set("n", "<leader>h1", function() require("harpoon"):list():select(1) end, { desc = "Harpoon 1" })
+vim.keymap.set("n", "<leader>h2", function() require("harpoon"):list():select(2) end, { desc = "Harpoon 2" })
+vim.keymap.set("n", "<leader>h3", function() require("harpoon"):list():select(3) end, { desc = "Harpoon 3" })
+vim.keymap.set("n", "<leader>h4", function() require("harpoon"):list():select(4) end, { desc = "Harpoon 4" })
+
+-- Ufo folding
+vim.keymap.set("n", "zR", function() require("ufo").openAllFolds() end, { desc = "Open all folds" })
+vim.keymap.set("n", "zM", function() require("ufo").closeAllFolds() end, { desc = "Close all folds" })
+vim.keymap.set("n", "zr", function() require("ufo").openFoldsExceptKinds() end, { desc = "Open folds except kinds" })
+vim.keymap.set("n", "zm", function() require("ufo").closeFoldsWith() end, { desc = "Close folds with" })
 
 vim.opt.clipboard = 'unnamedplus'
