@@ -9,12 +9,12 @@ vim.opt.wrap = false
 vim.opt.scrolloff = 8
 vim.opt.signcolumn = "yes"
 vim.opt.cursorline = true
-
--- bootstrap lazy.nvim
+vim.opt.foldlevel = 99
+vim.opt.foldlevelstart = 99
+-- bootstrap lazy.n
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
-  vim.fn.system({ "git", "clone", "--filter=blob:none",
-    "https://github.com/folke/lazy.nvim.git", lazypath })
+	vim.fn.system({ "git", "clone", "--filter=blob:none", "https://github.com/folke/lazy.nvim.git", lazypath })
 end
 vim.opt.rtp:prepend(lazypath)
 
@@ -23,220 +23,238 @@ vim.g.mapleader = " "
 
 -- load Lazy.nvim and setup plugins
 require("lazy").setup({
-  -- Colorscheme
-  {
-    "AlexvZyl/nordic.nvim",
-    lazy = false,
-    priority = 1000,
-    config = function()
-      require("nordic").load()
-    end,
-  },
+	-- Colorscheme
+	{
+		"AlexvZyl/nordic.nvim",
+		lazy = false,
+		priority = 1000,
+		config = function()
+			require("nordic").load()
+		end,
+	},
 
-  -- Telescope for fuzzy finding
-  { "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
+	-- Telescope for fuzzy finding
+	{ "nvim-telescope/telescope.nvim", dependencies = { "nvim-lua/plenary.nvim" } },
 
-  -- Treesitter for better syntax highlighting
-  { "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
+	-- Treesitter for better syntax highlighting
+	{ "nvim-treesitter/nvim-treesitter", build = ":TSUpdate" },
 
-  -- Mason for managing LSP servers
-  {
-    "williamboman/mason.nvim",
-    config = function()
-      require("mason").setup()
-    end,
-  },
-  {
-    "williamboman/mason-lspconfig.nvim",
-    dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
-    config = function()
-      require("mason-lspconfig").setup({
-        ensure_installed = { "pyright", "gopls", "rust_analyzer" },
-      })
-    end,
-  },
+	-- Mason for managing LSP servers
+	{
+		"williamboman/mason.nvim",
+		config = function()
+			require("mason").setup()
+		end,
+	},
+	{
+		"williamboman/mason-lspconfig.nvim",
+		dependencies = { "williamboman/mason.nvim", "neovim/nvim-lspconfig" },
+		config = function()
+			require("mason-lspconfig").setup({
+				ensure_installed = { "pyright", "gopls", "rust_analyzer" },
+			})
+		end,
+	},
 
-  -- File tree
-  {
-    "nvim-neo-tree/neo-tree.nvim",
-    branch = "v3.x",
-    dependencies = {
-      "nvim-lua/plenary.nvim",
-      "nvim-tree/nvim-web-devicons",
-      "MunifTanjim/nui.nvim",
-    },
-    config = function()
-      require("neo-tree").setup({
-        filesystem = {
-          filtered_items = {
-            visible = true,
-            hide_dotfiles = false,
-            hide_gitignored = false,
-          },
-          follow_current_file = { enabled = true },
-        },
-      })
-    end,
-  },
+	-- File tree
+	{
+		"nvim-neo-tree/neo-tree.nvim",
+		branch = "v3.x",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			"nvim-tree/nvim-web-devicons",
+			"MunifTanjim/nui.nvim",
+		},
+		config = function()
+			require("neo-tree").setup({
+				filesystem = {
+					filtered_items = {
+						visible = true,
+						hide_dotfiles = false,
+						hide_gitignored = false,
+					},
+					follow_current_file = { enabled = true },
+				},
+			})
+		end,
+	},
 
-  -- Debugger
-  {
-    "mfussenegger/nvim-dap",
-    dependencies = {
-      "rcarriga/nvim-dap-ui",
-      "nvim-neotest/nvim-nio",
-      "mfussenegger/nvim-dap-python",
-      "leoluz/nvim-dap-go",
-    },
-    config = function()
-      local dap = require("dap")
-      local dapui = require("dapui")
+	-- Debugger
+	{
+		"mfussenegger/nvim-dap",
+		dependencies = {
+			"rcarriga/nvim-dap-ui",
+			"nvim-neotest/nvim-nio",
+			"mfussenegger/nvim-dap-python",
+			"leoluz/nvim-dap-go",
+		},
+		config = function()
+			local dap = require("dap")
+			local dapui = require("dapui")
 
-      dapui.setup()
+			dapui.setup()
 
-      -- Auto open/close UI
-      dap.listeners.after.event_initialized["dapui_config"] = function() dapui.open() end
-      dap.listeners.before.event_terminated["dapui_config"] = function() dapui.close() end
-      dap.listeners.before.event_exited["dapui_config"] = function() dapui.close() end
+			-- Auto open/close UI
+			dap.listeners.after.event_initialized["dapui_config"] = function()
+				dapui.open()
+			end
+			dap.listeners.before.event_terminated["dapui_config"] = function()
+				dapui.close()
+			end
+			dap.listeners.before.event_exited["dapui_config"] = function()
+				dapui.close()
+			end
 
-      -- Python (uses debugpy)
-      require("dap-python").setup("python3")
+			-- Python (uses debugpy)
+			require("dap-python").setup("python3")
 
-      -- Go (uses delve)
-      require("dap-go").setup()
+			-- Go (uses delve)
+			require("dap-go").setup()
 
-      -- Rust (uses codelldb via Mason)
-      dap.adapters.codelldb = {
-        type = "server",
-        port = "${port}",
-        executable = {
-          command = vim.fn.stdpath("data") .. "/mason/bin/codelldb",
-          args = { "--port", "${port}" },
-        },
-      }
-      dap.configurations.rust = {
-        {
-          name = "Launch",
-          type = "codelldb",
-          request = "launch",
-          program = function()
-            return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
-          end,
-          cwd = "${workspaceFolder}",
-        },
-      }
-    end,
-  },
+			-- Rust (uses codelldb via Mason)
+			dap.adapters.codelldb = {
+				type = "server",
+				port = "${port}",
+				executable = {
+					command = vim.fn.stdpath("data") .. "/mason/bin/codelldb",
+					args = { "--port", "${port}" },
+				},
+			}
+			dap.configurations.rust = {
+				{
+					name = "Launch",
+					type = "codelldb",
+					request = "launch",
+					program = function()
+						return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
+					end,
+					cwd = "${workspaceFolder}",
+				},
+			}
+		end,
+	},
 
-  -- Formatting
-  {
-    "stevearc/conform.nvim",
-    config = function()
-      require("conform").setup({
-        formatters_by_ft = {
-          python = { "ruff_format" },
-          go = { "gofmt" },
-          rust = { "rustfmt" },
-        },
-        format_on_save = {
-          timeout_ms = 500,
-          lsp_format = "fallback",
-        },
-      })
-    end,
-  },
+	-- Formatting
+	{
+		"stevearc/conform.nvim",
+		config = function()
+			require("conform").setup({
+				formatters_by_ft = {
+					python = { "ruff_format" },
+					go = { "gofmt" },
+					rust = { "rustfmt" },
+				},
+				format_on_save = {
+					timeout_ms = 500,
+					lsp_format = "fallback",
+				},
+			})
+		end,
+	},
 
-  -- Git signs in gutter
-  {
-    "lewis6991/gitsigns.nvim",
-    config = function()
-      require("gitsigns").setup()
-    end,
-  },
+	-- Git signs in gutter
+	{
+		"lewis6991/gitsigns.nvim",
+		config = function()
+			require("gitsigns").setup()
+		end,
+	},
 
-  -- Autopairs
-  {
-    "windwp/nvim-autopairs",
-    event = "InsertEnter",
-    config = function()
-      require("nvim-autopairs").setup()
-    end,
-  },
+	-- Autopairs
+	{
+		"windwp/nvim-autopairs",
+		event = "InsertEnter",
+		config = function()
+			require("nvim-autopairs").setup()
+		end,
+	},
 
-  -- Statusline
-  {
-    "nvim-lualine/lualine.nvim",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    config = function()
-      require("lualine").setup()
-    end,
-  },
+	-- Statusline
+	{
+		"nvim-lualine/lualine.nvim",
+		dependencies = { "nvim-tree/nvim-web-devicons" },
+		config = function()
+			require("lualine").setup()
+		end,
+	},
 
-  -- Which-key for keybinding hints
-  {
-    "folke/which-key.nvim",
-    event = "VeryLazy",
-    config = function()
-      require("which-key").setup()
-    end,
-  },
+	-- Which-key for keybinding hints
+	{
+		"folke/which-key.nvim",
+		event = "VeryLazy",
+		config = function()
+			require("which-key").setup()
+		end,
+	},
 
-  -- Commenting
-  {
-    "numToStr/Comment.nvim",
-    config = function()
-      require("Comment").setup()
-    end,
-  },
+	-- Commenting
+	{
+		"numToStr/Comment.nvim",
+		config = function()
+			require("Comment").setup()
+		end,
+	},
 
-  -- Diagnostic list
-  {
-    "folke/trouble.nvim",
-    dependencies = { "nvim-tree/nvim-web-devicons" },
-    config = function()
-      require("trouble").setup()
-    end,
-  },
+	-- Diagnostic list
+	{
+		"folke/trouble.nvim",
+		dependencies = { "nvim-tree/nvim-web-devicons" },
+		config = function()
+			require("trouble").setup()
+		end,
+	},
 
-  -- Quick file jumping
-  {
-    "ThePrimeagen/harpoon",
-    branch = "harpoon2",
-    dependencies = { "nvim-lua/plenary.nvim" },
-    config = function()
-      require("harpoon"):setup()
-    end,
-  },
+	-- Quick file jumping
+	{
+		"ThePrimeagen/harpoon",
+		branch = "harpoon2",
+		dependencies = { "nvim-lua/plenary.nvim" },
+		config = function()
+			require("harpoon"):setup()
+		end,
+	},
 
-  -- Modern folding
-  {
-    "kevinhwang91/nvim-ufo",
-    dependencies = { "kevinhwang91/promise-async" },
-    config = function()
-      require("ufo").setup()
-    end,
-  },
-
-  -- Completion engine
-  {
-    "hrsh7th/nvim-cmp",
-    dependencies = { "hrsh7th/cmp-nvim-lsp" },
-    config = function()
-      local cmp = require("cmp")
-      cmp.setup({
-        sources = cmp.config.sources({
-          { name = "nvim_lsp" },
-        }),
-        mapping = cmp.mapping.preset.insert({
-          ["<C-Space>"] = cmp.mapping.complete(),
-          ["<C-e>"]     = cmp.mapping.abort(),
-          ["<CR>"]      = cmp.mapping.confirm({ select = true }),
-          ["<Tab>"]     = cmp.mapping.select_next_item(),
-          ["<S-Tab>"]   = cmp.mapping.select_prev_item(),
-        }),
-      })
-    end,
-  },
+	-- Modern folding
+	{
+		"kevinhwang91/nvim-ufo",
+		dependencies = { "kevinhwang91/promise-async" },
+		config = function()
+			require("ufo").setup()
+		end,
+	},
+	{
+		dir = "/home/samlewis/Work/repos/quill",
+		name = "quill",
+		config = function()
+			require("quill").setup({})
+		end,
+	},
+	{
+		"hrsh7th/nvim-cmp",
+		dependencies = { "hrsh7th/cmp-nvim-lsp" },
+		config = function()
+			local cmp = require("cmp")
+			cmp.setup({
+				sources = cmp.config.sources({
+					{ name = "nvim_lsp" },
+				}),
+				mapping = cmp.mapping.preset.insert({
+					["<C-Space>"] = cmp.mapping.complete(),
+					["<C-e>"] = cmp.mapping.abort(),
+					["<CR>"] = cmp.mapping.confirm({ select = true }),
+					["<Tab>"] = cmp.mapping.select_next_item(),
+					["<S-Tab>"] = cmp.mapping.select_prev_item(),
+				}),
+			})
+		end,
+	},
+	{
+		"gruvw/strudel.nvim",
+		build = "npm ci",
+		config = function()
+			require("strudel").setup()
+		end,
+	},
 })
 
 -- LSP server config
@@ -245,18 +263,24 @@ local lspconfig = require("lspconfig")
 
 local servers = { "pyright", "gopls", "rust_analyzer" }
 for _, server in ipairs(servers) do
-  vim.lsp.config(server, {
-    capabilities = capabilities,
-  })
+	vim.lsp.config(server, {
+		capabilities = capabilities,
+	})
 end
 
 -- Keymaps
 vim.keymap.set("n", "<leader>fe", ":Neotree toggle<CR>", { desc = "Toggle file tree" })
 
 -- Telescope keymaps
-vim.keymap.set("n", "<leader>ff", function() require("telescope.builtin").find_files() end, { desc = "Find files" })
-vim.keymap.set("n", "<leader>fg", function() require("telescope.builtin").live_grep() end, { desc = "Live grep" })
-vim.keymap.set("n", "<leader>fb", function() require("telescope.builtin").buffers() end, { desc = "Find buffers" })
+vim.keymap.set("n", "<leader>ff", function()
+	require("telescope.builtin").find_files()
+end, { desc = "Find files" })
+vim.keymap.set("n", "<leader>fg", function()
+	require("telescope.builtin").live_grep()
+end, { desc = "Live grep" })
+vim.keymap.set("n", "<leader>fb", function()
+	require("telescope.builtin").buffers()
+end, { desc = "Find buffers" })
 
 -- LSP keymaps
 vim.keymap.set("n", "gd", vim.lsp.buf.definition, { desc = "Go to definition" })
@@ -269,37 +293,95 @@ vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous diagnosti
 vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
 
 -- Gitsigns keymaps
-vim.keymap.set("n", "<leader>gb", function() require("gitsigns").blame_line({ full = true }) end, { desc = "Git blame line" })
-vim.keymap.set("n", "<leader>gp", function() require("gitsigns").preview_hunk() end, { desc = "Preview git hunk" })
-vim.keymap.set("n", "]h", function() require("gitsigns").next_hunk() end, { desc = "Next git hunk" })
-vim.keymap.set("n", "[h", function() require("gitsigns").prev_hunk() end, { desc = "Previous git hunk" })
+vim.keymap.set("n", "<leader>gb", function()
+	require("gitsigns").blame_line({ full = true })
+end, { desc = "Git blame line" })
+vim.keymap.set("n", "<leader>gp", function()
+	require("gitsigns").preview_hunk()
+end, { desc = "Preview git hunk" })
+vim.keymap.set("n", "]h", function()
+	require("gitsigns").next_hunk()
+end, { desc = "Next git hunk" })
+vim.keymap.set("n", "[h", function()
+	require("gitsigns").prev_hunk()
+end, { desc = "Previous git hunk" })
 
 -- Debug keymaps
-vim.keymap.set("n", "<leader>db", function() require("dap").toggle_breakpoint() end, { desc = "Toggle breakpoint" })
-vim.keymap.set("n", "<leader>dc", function() require("dap").continue() end, { desc = "Debug continue/start" })
-vim.keymap.set("n", "<leader>do", function() require("dap").step_over() end, { desc = "Debug step over" })
-vim.keymap.set("n", "<leader>di", function() require("dap").step_into() end, { desc = "Debug step into" })
-vim.keymap.set("n", "<leader>du", function() require("dapui").toggle() end, { desc = "Toggle debug UI" })
+vim.keymap.set("n", "<leader>db", function()
+	require("dap").toggle_breakpoint()
+end, { desc = "Toggle breakpoint" })
+vim.keymap.set("n", "<leader>dc", function()
+	require("dap").continue()
+end, { desc = "Debug continue/start" })
+vim.keymap.set("n", "<leader>do", function()
+	require("dap").step_over()
+end, { desc = "Debug step over" })
+vim.keymap.set("n", "<leader>di", function()
+	require("dap").step_into()
+end, { desc = "Debug step into" })
+vim.keymap.set("n", "<leader>du", function()
+	require("dapui").toggle()
+end, { desc = "Toggle debug UI" })
 
 -- Trouble keymaps
-vim.keymap.set("n", "<leader>xx", function() require("trouble").toggle() end, { desc = "Toggle trouble" })
-vim.keymap.set("n", "<leader>xw", function() require("trouble").toggle("workspace_diagnostics") end, { desc = "Workspace diagnostics" })
-vim.keymap.set("n", "<leader>xd", function() require("trouble").toggle("document_diagnostics") end, { desc = "Document diagnostics" })
-vim.keymap.set("n", "<leader>xl", function() require("trouble").toggle("loclist") end, { desc = "Location list" })
-vim.keymap.set("n", "<leader>xq", function() require("trouble").toggle("quickfix") end, { desc = "Quickfix list" })
+vim.keymap.set("n", "<leader>xx", function()
+	require("trouble").toggle()
+end, { desc = "Toggle trouble" })
+vim.keymap.set("n", "<leader>xw", function()
+	require("trouble").toggle("workspace_diagnostics")
+end, { desc = "Workspace diagnostics" })
+vim.keymap.set("n", "<leader>xd", function()
+	require("trouble").toggle("document_diagnostics")
+end, { desc = "Document diagnostics" })
+vim.keymap.set("n", "<leader>xl", function()
+	require("trouble").toggle("loclist")
+end, { desc = "Location list" })
+vim.keymap.set("n", "<leader>xq", function()
+	require("trouble").toggle("quickfix")
+end, { desc = "Quickfix list" })
 
 -- Harpoon keymaps
-vim.keymap.set("n", "<leader>ha", function() require("harpoon"):list():add() end, { desc = "Add file to harpoon" })
-vim.keymap.set("n", "<leader>hh", function() require("harpoon"):list():toggle() end, { desc = "Toggle harpoon" })
-vim.keymap.set("n", "<leader>h1", function() require("harpoon"):list():select(1) end, { desc = "Harpoon 1" })
-vim.keymap.set("n", "<leader>h2", function() require("harpoon"):list():select(2) end, { desc = "Harpoon 2" })
-vim.keymap.set("n", "<leader>h3", function() require("harpoon"):list():select(3) end, { desc = "Harpoon 3" })
-vim.keymap.set("n", "<leader>h4", function() require("harpoon"):list():select(4) end, { desc = "Harpoon 4" })
+vim.keymap.set("n", "<leader>ha", function()
+	require("harpoon"):list():add()
+end, { desc = "Add file to harpoon" })
+vim.keymap.set("n", "<leader>hh", function()
+	require("harpoon"):list():toggle()
+end, { desc = "Toggle harpoon" })
+vim.keymap.set("n", "<leader>h1", function()
+	require("harpoon"):list():select(1)
+end, { desc = "Harpoon 1" })
+vim.keymap.set("n", "<leader>h2", function()
+	require("harpoon"):list():select(2)
+end, { desc = "Harpoon 2" })
+vim.keymap.set("n", "<leader>h3", function()
+	require("harpoon"):list():select(3)
+end, { desc = "Harpoon 3" })
+vim.keymap.set("n", "<leader>h4", function()
+	require("harpoon"):list():select(4)
+end, { desc = "Harpoon 4" })
 
 -- Ufo folding
-vim.keymap.set("n", "zR", function() require("ufo").openAllFolds() end, { desc = "Open all folds" })
-vim.keymap.set("n", "zM", function() require("ufo").closeAllFolds() end, { desc = "Close all folds" })
-vim.keymap.set("n", "zr", function() require("ufo").openFoldsExceptKinds() end, { desc = "Open folds except kinds" })
-vim.keymap.set("n", "zm", function() require("ufo").closeFoldsWith() end, { desc = "Close folds with" })
+vim.keymap.set("n", "zR", function()
+	require("ufo").openAllFolds()
+end, { desc = "Open all folds" })
+vim.keymap.set("n", "zM", function()
+	require("ufo").closeAllFolds()
+end, { desc = "Close all folds" })
+vim.keymap.set("n", "zr", function()
+	require("ufo").openFoldsExceptKinds()
+end, { desc = "Open folds except kinds" })
+vim.keymap.set("n", "zm", function()
+	require("ufo").closeFoldsWith()
+end, { desc = "Close folds with" })
 
-vim.opt.clipboard = 'unnamedplus'
+vim.api.nvim_create_autocmd("User", {
+	pattern = "VeryLazy",
+	callback = function()
+		require("which-key").add({
+			{ "<leader>q", group = "Quill", mode = { "n", "v" } },
+			{ "<leader>qc", desc = "Suggest change", mode = { "n", "v" } },
+		})
+	end,
+})
+
+vim.opt.clipboard = "unnamedplus"
