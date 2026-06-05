@@ -340,6 +340,14 @@ vim.keymap.set("n", "<leader>xq", function()
 	require("trouble").toggle("quickfix")
 end, { desc = "Quickfix list" })
 
+-- Strudel keymaps
+vim.keymap.set("n", "<leader>sl", require("strudel").launch, { desc = "Launch Strudel" })
+vim.keymap.set("n", "<leader>sq", require("strudel").quit, { desc = "Quit Strudel" })
+vim.keymap.set("n", "<leader>st", require("strudel").toggle, { desc = "Strudel Toggle Play/Stop" })
+vim.keymap.set("n", "<leader>su", require("strudel").update, { desc = "Strudel Update" })
+vim.keymap.set("n", "<leader>ss", require("strudel").stop, { desc = "Strudel Stop Playback" })
+vim.keymap.set("n", "<leader>se", require("strudel").execute, { desc = "Strudel set buffer and update" })
+
 -- Harpoon keymaps
 vim.keymap.set("n", "<leader>ha", function()
 	require("harpoon"):list():add()
@@ -380,6 +388,7 @@ vim.api.nvim_create_autocmd("User", {
 		require("which-key").add({
 			{ "<leader>q", group = "Quill", mode = { "n", "v" } },
 			{ "<leader>qc", desc = "Suggest change", mode = { "n", "v" } },
+			{ "<leader>s", group = "Strudel", mode = { "n", "v" } },
 		})
 	end,
 })
