@@ -223,13 +223,6 @@ require("lazy").setup({
 		end,
 	},
 	{
-		dir = "/home/samlewis/Work/repos/quill",
-		name = "quill",
-		config = function()
-			require("quill").setup({})
-		end,
-	},
-	{
 		"hrsh7th/nvim-cmp",
 		dependencies = { "hrsh7th/cmp-nvim-lsp" },
 		config = function()
@@ -246,13 +239,6 @@ require("lazy").setup({
 					["<S-Tab>"] = cmp.mapping.select_prev_item(),
 				}),
 			})
-		end,
-	},
-	{
-		"gruvw/strudel.nvim",
-		build = "npm ci",
-		config = function()
-			require("strudel").setup()
 		end,
 	},
 })
